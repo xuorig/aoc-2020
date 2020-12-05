@@ -30,9 +30,21 @@ fn main() {
         }
     });
 
+    println!("PART 1");
     let top = &passes[0];
     println!("{:?}", top);
     println!("{}", seat_id(&top.0, &top.1));
+
+    println!("PART 2");
+    for i in 0..passes.len() - 2 {
+        let first_seat_score = seat_id(&passes[i].0, &passes[i].1);
+        let second_seat_score = seat_id(&passes[i + 1].0, &passes[i + 1].1);
+
+        if first_seat_score - second_seat_score == 2 {
+            // Our pass could then be in between
+            println!("Possible seat: {}", first_seat_score - 1)
+        }
+    }
 }
 
 fn seat_id(row: &String, col: &String) -> i32 {
@@ -45,8 +57,6 @@ fn seat_id(row: &String, col: &String) -> i32 {
         } else {
             row_max = ((row_max + row_min) / 2) - 1;
         }
-
-        println!("min {} max {}", row_min, row_max);
     }
 
     let mut col_min = 0;
@@ -59,8 +69,6 @@ fn seat_id(row: &String, col: &String) -> i32 {
             col_max = ((col_max + col_min) / 2) - 1;
         }
     }
-
-    println!("row {} col {}", row_min, col_min);
 
     // Every seat also has a unique seat ID: multiply the row by 8, then add the column. In this example, the seat has ID 44 * 8 + 5 = 357.
     (row_min * 8) + col_min
