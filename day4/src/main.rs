@@ -1,7 +1,7 @@
-use std::fs::File;
-
+use regex::Regex;
 use std::collections::HashMap;
 use std::collections::HashSet;
+use std::fs::File;
 
 use std::io::{BufRead, BufReader};
 
@@ -50,6 +50,14 @@ fn main() {
         }
     }
 
+    if valid_passport(&current_passport, &required_fields) {
+        valid_passports += 1;
+    }
+
+    if valid_passport_strict(&current_passport, &required_fields) {
+        valid_strict_passports += 1;
+    }
+
     println!("Part 1: Valid passports: {}", valid_passports);
     println!("Part 2: Valid passports: {}", valid_strict_passports)
 }
@@ -64,27 +72,46 @@ fn valid_passport_strict(
 ) -> bool {
     // First check that all required fields are present
     if !required_fields.iter().all(|k| passport.contains_key(k)) {
+        println!("Failed required all keys");
         return false;
     }
 
     if !valid_year(passport.get("byr").unwrap(), 1920, 2002) {
+        println!("Failed byr");
         return false;
     }
 
     if !valid_year(passport.get("iyr").unwrap(), 2010, 2020) {
+        println!("Failed iyr");
         return false;
     }
 
     if !valid_year(passport.get("eyr").unwrap(), 2020, 2030) {
+        println!("Failed eyr");
         return false;
     }
 
     if !valid_height(passport.get("hgt").unwrap()) {
+        println!("Failed hgt");
         return false;
     }
 
-    //TODO rest of validations
+    if !valid_hair(passport.get("hcl").unwrap()) {
+        println!("Failed hcl");
+        return false;
+    }
 
+    if !valid_eyes(passport.get("ecl").unwrap()) {
+        println!("Failed ecl");
+        return false;
+    }
+
+    if !valid_pid(passport.get("pid").unwrap()) {
+        println!("Failed pid");
+        return false;
+    }
+
+    println!("Valid Passport");
     true
 }
 
@@ -94,9 +121,43 @@ fn valid_year(year: &String, min: i32, max: i32) -> bool {
 }
 
 fn valid_height(height: &String) -> bool {
-    let nums = vec![];
-    let unit = vec![];
+    let cm_re = Regex::new(r"(\d+)cm").unwrap();
+    if cm_re.is_match(height) {
+        let h = cm_re.captures(height).unwrap();
+        let parsed_height = h.get(1).unwrap().as_str().parse::<i32>();
 
-    // TODO
-    true
+        match parsed_height {
+            Ok(x) => return x >= 150 && x <= 193,
+            Err(_) => return false,
+        }
+    }
+
+    let in_re = Regex::new(r"(\d+)in").unwrap();
+
+    if in_re.is_match(height) {
+        let h = in_re.captures(height).unwrap();
+        let parsed_height = h.get(1).unwrap().as_str().parse::<i32>();
+
+        match parsed_height {
+            Ok(x) => return x >= 59 && x <= 76,
+            Err(_) => return false,
+        }
+    }
+
+    false
+}
+
+fn valid_hair(hair: &String) -> bool {
+    let re = Regex::new(r"^#[a-f0-9]{6}$").unwrap();
+    re.is_match(hair)
+}
+
+fn valid_eyes(eyes: &String) -> bool {
+    let re = Regex::new(r"^(amb|blu|brn|gry|grn|hzl|oth){1}$").unwrap();
+    re.is_match(eyes)
+}
+
+fn valid_pid(pid: &String) -> bool {
+    let re = Regex::new(r"^\d{9}$").unwrap();
+    re.is_match(pid)
 }
